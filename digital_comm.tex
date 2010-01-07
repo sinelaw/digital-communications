@@ -1,0 +1,54 @@
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "dig_summary"
+%%% End: 
+
+\documentclass[onecolumn,x11names,technote,twoside,a4paper,10pt,english]{IEEEtran}
+\usepackage[english]{babel}
+\usepackage[pdftex]{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{euler}                                %Nicer numbers
+\usepackage{listings}
+
+\begin{document}
+
+\title{Introduction to Digital Communications Systems}
+\author{Noam~Lewis noamle@bgu.ac.il}
+
+\maketitle
+\clearpage
+\section{Introduction}
+This report is about  digital communication systems (DCS). In the context of this report, a DCS is responsible for communicating digital information (bits) from transmitter to receiver, over an analog channel. The main issues that such a system must solve are:
+\begin{enumerate}
+\item Encoding of the digital information into an analog signal (encoder and transmit filter)
+\item Transmission of the encoded (analog) signal over a noisy band-limited channel (modulator)
+\item Receiving the analog signal  (linear section and demodulator)
+\item Decoding the detected signal, with minimal loss of digital information (receive filter, decision device and decoder)
+\end{enumerate}
+
+In this report we shall deal exclusively with additive, white gaussian noise channels (AWGN channels). Additive means that the received signal can be expressed as a sum of the transmitted signal and the noise. The gaussian white noise property eases analysis in general, and specifically of how the noise is affected when passing through elements of the receiver.
+
+We shall touch on three types of systems:
+\begin{enumerate}
+\item Single-carrier
+\item Multi-carrier
+\item Spread spectrum
+\end{enumerate}
+The report is written so that subjects are gradually presented, so that each section builds on knowledge from previous ones.
+
+
+
+
+\clearpage
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,projectbib}
+
+
+\end{document}
+
+
