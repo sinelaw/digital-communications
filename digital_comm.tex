@@ -1,7 +1,7 @@
 
 %%% Local Variables: 
 %%% mode: latex
-%%% TeX-master: "dig_summary"
+%%% TeX-master: "digital_comm"
 %%% End: 
 
 \documentclass[onecolumn,x11names,technote,twoside,a4paper,10pt,english]{IEEEtran}
@@ -15,10 +15,12 @@
 \usepackage{euler}                                %Nicer numbers
 \usepackage{listings}
 
+\usepackage[shell,pdf]{dottex}
+
 \begin{document}
 
 \title{Introduction to Digital Communications Systems}
-\author{Noam~Lewis noamle@bgu.ac.il}
+\author{Notes from lectures given by Lev~Goldfeld, summarized by Noam~Lewis [noamle@bgu.ac.il]}
 
 \maketitle
 \clearpage
@@ -31,6 +33,19 @@ This report is about  digital communication systems (DCS). In the context of thi
 \item Decoding the detected signal, with minimal loss of digital information (receive filter, decision device and decoder)
 \end{enumerate}
 
+\begin{figure}[h!]
+  \centering
+  \begin{dotpic}[width=2in]
+    rankdir=LR; 
+    input->DCS [label="bits\nsent"];
+    DCS->output [label="bits\nreceived"];
+    DCS [shape="box"];
+    input [style="invisible"];
+    output [style="invisible"];
+  \end{dotpic}
+  \label{fig:DCS}
+\end{figure}
+
 In this report we shall deal exclusively with additive, white gaussian noise channels (AWGN channels). Additive means that the received signal can be expressed as a sum of the transmitted signal and the noise. The gaussian white noise property eases analysis in general, and specifically of how the noise is affected when passing through elements of the receiver.
 
 We shall touch on three types of systems:
@@ -41,8 +56,107 @@ We shall touch on three types of systems:
 \end{enumerate}
 The report is written so that subjects are gradually presented, so that each section builds on knowledge from previous ones.
 
+\section{Single Carrier Systems}
+\label{sec:single-carrier}
 
+The input to a DCS is always a sequence of bits, denoted $\bar{b}$. On the receiving side the output of the system is another (ideally identical) sequence of bits, $\bar{b_r}$. The \emph{bitrate} of a DCS is the number of bits communicated per second, and is denoted $R_b$ (units: $\frac{\text{bits}}{\text{sec}}$).
 
+\subsection{Transmitter}
+\label{sec:sc-trans}
+
+\begin{figure}[h!]
+  \centering
+  \begin{dotpic}[width=5in]
+    rankdir=LR; 
+    input->SE [label="bits"];
+    SE->TF [label="symbols"];
+    TF->Modulator [label="analog signal"];
+    Modulator->output [label="modulated\nanalog signal"];
+    TF [label="Transmit\nFilter",shape="box"];
+    SE [label="Symbol\nEncoder",shape="box"];
+    Modulator [shape="box"];
+    input [style="invisible"];
+    output [style="invisible"];
+  \end{dotpic}
+  \caption{General structure of a digital transmitter}
+  \label{fig:DCS-Trans}
+\end{figure}
+
+As a first step, the bits in the sequence $\bar{b_r}$ entering a transmitter are encoded into symbols. The symbols are complex values (elements of $\mathbb{C}$) which are used later when creating the analog signal. Bits have two possible values, but symbols may have more. The number of possible symbols is called the \emph{dictionary size} and is denoted $M$. Thus, the number of bits per symbol is given by:
+\begin{equation*}
+  K = \log_2{M}\ \ \left[\frac{\text{bits}}{\text{sym}}\right]
+\end{equation*}
+We can similarly calculate the rate of symbols:
+\begin{eqnarray*}
+R_s &=& \frac{R_b}{\log_2{M}}\ \ \left[\frac{\text{sym}}{\text{sec}}\right]\ \{\text{Symbol rate}\} \\
+T_s &=& \frac{1}{R_s}
+\end{eqnarray*}
+$T_s$ is the time spent transmitting a symbol. 
+
+The dictionary of symbols is a set $\{A_k\}_{k=1}^M$. A symbol $A_k$, being complex numbers (elements of $\mathbb{C}$) can be expressed in a number of ways\footnote{$j$ is the standard notation in engineering for what mathematicians call $i$, and is equal to $\sqrt{-1}$.}:
+\begin{eqnarray*}
+  A_k &=& A_{k_i} + j A_{k_q} \\
+  A_k &=& |A_k|e^{j\phi_k} \\
+  \text{where} \\
+  |A_k| &=& \sqrt{A_{k_i}^2 + A_{k_q}^2} \\
+  \phi_k &=& \arctan{\frac{A_{k_q}}{A_{k_i}}}
+\end{eqnarray*}
+
+\subsubsection{Statistical properties of transmitted symbols}
+\label{sec:stat-symbs}
+
+In the general case the sequence of symbols $\bar{A_k}$ is a random process (which is in this case, a random sequence). It is assumed that the sequence is stationary in the wide sense, which means that the expectation and variance are constant wherever we are in the sequence. The probability of symbol $A_k$ occuring at any point in the sequence is $p_k$. 
+\begin{eqnarray*}
+  E\left[A_k\right] &=& \sum_{k=1}^M{p_k A_k} = \mu_a = \text{constant expectation} \\
+  \sigma_A^2 &=& E\left[A_k^2\right] - E^2\left[A_k\right] = \sum_{k=1}^M{p_k |A_k|^2} - \mu_a
+\end{eqnarray*}
+Since our random process is stationary, it has an autocorrelation function that depends only on the distance between symbols in the sequence. The autocorrelation function has a discrete-time fourier transform (DTFT) which is the power spectral density function of the sequence.\footnote{By the discrete case of the Wiener-Khinchin-Einstein, or Khinchin-Kolmogorov, theorem.}
+\begin{eqnarray*}
+  R_A(k) = E \left[ A_nA_{n+k} \right] &\xrightarrow{\mbox{ DTFT }}& S_A(f) = \sum_{k=-\infty}^{\infty} {R_A(k) e^{-j 2\pi k f T_s} }
+\end{eqnarray*}
+
+If the sequence $\bar{A_k}$ is also uncorrelated, $R_A(k)$ can be calculated by using the fact that any two symbols in the sequence are independent:
+\begin{equation*}
+  R_A(m) = \left\{ \begin{array}{rll} E\left[A_n^2\right] &= \sigma_A^2 + \mu_A^2 &\mbox{ if $k=0$} \\
+      \\
+                                     E\left[A_n\right]E\left[A_{n+m}\right] &= \mu_A^2 &\mbox{ otherwise} \\
+                   \end{array} \right.
+\end{equation*}
+
+Substituting for $R_A(m)$ in the expression for $S_A(f)$ yields:
+\begin{equation*}
+  S_A(f) = \sigma_a^2 + \mu_A^2 \sum_{m=-\infty}^{\infty}{\delta(f - \frac{m}{T_s})}
+\end{equation*}
+
+\subsubsection{Symbol encoder}
+\label{sec:sym-enc}
+The symbol encoder translated the incoming bit stream into a symbol stream (see Figure \ref{fig:DCS-Trans}).
+
+\subsubsection{Transmit filter}
+\label{sec:bb-tf}
+The transmit filter converts the discrete symbol stream from the symbol encoder, into an analog signal. Each symbol is converted by multiplication with a pulse function $g(t)$, and then integration. The converted signals from all the symbols in the sequence are summed to produce the final output. To formally denote the conversion we must first express the sequence $\bar{A_k}$ as an ``impulse train'' function in continuous time: 
+\begin{equation*}
+  \bar{A}(t) = \sum_{k=-\infty}^{\infty}{A_k \delta(t - kT_s)}
+\end{equation*}
+
+Then, the sequence is converted using convolution with the pulse function $g(t)$:
+\begin{eqnarray*}
+  s_d(t) &=& \int_{-\infty}^{\infty}{\bar{A}(t-\tau) g(\tau) d\tau} \\
+         &=& \int_{-\infty}^{\infty}{\sum_{k=-\infty}^{\infty}{A_k \delta(t - kT_s - \tau) } g(\tau) d\tau}  \\
+         && \mbox{\{Sifting property of $\delta$-function and linearity of integral\}} \\
+         &=& \sum_{k=-\infty}^{\infty}{A_k g(t - k T_s)} = \sum_{k=-\infty}^{\infty}{s_k(t)}
+\end{eqnarray*}
+The individual contribution of symbol number $k$ in the sequence is thus:
+\begin{equation*}
+  s_k(t) = A_k g(t - k T_s)
+\end{equation*}
+
+The pulse function $g(t)$ has either of the following properties:
+\begin{enumerate}
+\item $g(t)$ is non-zero in the interval $[0,T_s]$, and zero everywhere else (``full response filter'').
+\item $g(t)$ is non-zero somewhere outside $[0,T_s]$ (``partial response filter'').
+\end{enumerate}
+In 
 
 \clearpage
 \bibliographystyle{IEEEtran}
