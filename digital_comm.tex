@@ -4,7 +4,7 @@
 %%% TeX-master: "digital_comm"
 %%% End: 
 
-\documentclass[onecolumn,x11names,technote,twoside,a4paper,10pt,english]{IEEEtran}
+\documentclass[onecolumn,x11names,technote,twoside,a4paper,12pt,english]{IEEEtran}
 \usepackage[english]{babel}
 \usepackage[pdftex]{graphicx}
 \usepackage{amssymb}
@@ -14,10 +14,13 @@
 \usepackage{tikz}
 \usepackage{euler}                                %Nicer numbers
 \usepackage{listings}
-
+\usepackage{subfigure}
 \usepackage[shell,pdf]{dottex}
 
+\newtheorem{example}{Example}
+
 \begin{document}
+
 
 \title{Introduction to Digital Communications Systems}
 \author{Notes from lectures given by Lev~Goldfeld, summarized by Noam~Lewis [noamle@bgu.ac.il]}
@@ -118,7 +121,6 @@ Since our random process is stationary, it has an autocorrelation function that 
 If the sequence $\bar{A_k}$ is also uncorrelated, $R_A(k)$ can be calculated by using the fact that any two symbols in the sequence are independent:
 \begin{equation*}
   R_A(m) = \left\{ \begin{array}{rll} E\left[A_n^2\right] &= \sigma_A^2 + \mu_A^2 &\mbox{ if $k=0$} \\
-      \\
                                      E\left[A_n\right]E\left[A_{n+m}\right] &= \mu_A^2 &\mbox{ otherwise} \\
                    \end{array} \right.
 \end{equation*}
@@ -153,10 +155,120 @@ The individual contribution of symbol number $k$ in the sequence is thus:
 
 The pulse function $g(t)$ has either of the following properties:
 \begin{enumerate}
-\item $g(t)$ is non-zero in the interval $[0,T_s]$, and zero everywhere else (``full response filter'').
+\item $g(t)$ is non-zero in a subset of $[0,T_s]$, and zero everywhere else (``full response filter'').
 \item $g(t)$ is non-zero somewhere outside $[0,T_s]$ (``partial response filter'').
 \end{enumerate}
-In 
+For full response filters, the time-limited nature of $g(t)$ implies that the output signal has an inifnite bandwidth (frequency response is non-zero in an unbounded interval). Partial response filters don't suffer this drawback. On the other hand, partial response filters have overlapping pulses - the pulse belonging to one symbol overlaps at least one other pulse. This overlap in time requires the receiver to do ``extra work'' in order to detect symbols correctly.
+
+\begin{figure}[h!]
+  \centering
+  \subfigure[A full-response filter]{
+    \begin{tikzpicture}
+      \draw[->] (-0.2,0) -- (2.5,0) node[right] {$t$};
+      \draw[->] (0,-0.1) -- (0,1.5) node[above] {$g(t)$};
+      \draw[very thick] plot coordinates {(0,0) (0,1) (2,1) (2,0)};
+      \draw (2,2pt) -- (2,-2pt) node[below] {$T_s$};
+      \draw (-2pt,1) -- (2pt,1) node[left=2pt] {$v$};
+      % \draw[very thin,color=gray] (-0.1,-0.1) grid (1.1,1.1);
+    \end{tikzpicture}
+    \label{fig:pulse_fr}
+  }
+  \subfigure[The full-response pulse used in Manchester coding]{
+    \begin{tikzpicture}
+      \draw[->] (-0.2,0) -- (2.5,0) node[right] {$t$};
+      \draw[->] (0,-0.1) -- (0,1.5) node[above] {$g(t)$};
+      \draw[very thick] plot coordinates {(0,0) (0,1) (1,1) (1,-1) (2,-1) (2,0)};
+      \draw (2,2pt) -- (2,-2pt) node[above=2pt] {$T_s$};
+      \draw (-2pt,1) -- (2pt,1) node[left=2pt] {$v$};
+      % \draw[very thin,color=gray] (-0.1,-0.1) grid (1.1,1.1);
+    \end{tikzpicture}
+    \label{fig:pulse_fr_man}
+  }
+  \subfigure[A partial-response filter]{
+    \begin{tikzpicture}[domain=-2.5:2.5]
+      \draw[->] (-2.5,0) -- (3,0) node[right] {$t$};
+      \draw[->] (0,-0.1) -- (0,1.5) node[above] {$g(t)$};
+      \draw[very thick,smooth,samples=200,variable=\x] plot (\x,{sin(\x*6 r)/(\x*6)});
+      \draw (2,2pt) -- (2,-2pt) node[above=2pt] {$T_s$};
+      \draw (-2pt,1) -- (2pt,1) node[left=2pt] {$v$};
+      % \draw[very thin,color=gray] (-0.1,-0.1) grid (1.1,1.1);
+    \end{tikzpicture}
+    \label{fig:pulse_pr}
+  }
+\end{figure}
+
+Using $A_k = A_{k_i} + j A_{k_q}$, we can express $s_d(t)$ as the following sum:
+\begin{equation*}
+  s_d(t) = \sum_{k=-\infty}^{\infty}{A_{k_i} g(t - k T_s)} + \sum_{k=-\infty}^{\infty}{A_{k_q} g(t - k T_s)} = s_{d_i}(t) + s_{d_q}(t)
+\end{equation*}
+In the case of purely real symbols ($A_k \in \mathbb{R} \Rightarrow A_{k_q}=0$) the component $s_{d_q}(t)$ is zero.
+
+For the general case, the power spectral density function of $s_d(t)$ is given by:
+\begin{equation}
+  \label{eq:s_d_power}
+  S_d(f)=\frac{\sigma_A^2}{T_s} |G(f)|^2 + \frac{\mu_A^2}{T_s} \sum_{m=-\infty}^{\infty}{|G(f)|^2 \delta \left(f-\frac{m}{T_s}\right)}
+\end{equation}
+Where $G(f)$ is the fourier transform of the pulse function $g(t)$. If the symbols are symmetrically positioned around the origin, and the probabilities $p_k$ are all equal, the expectation $\mu_A$ will be zero and the second term in the above equation will be eliminated.
+
+\begin{example}[Rectangular pulse]
+  \label{ex:rect-pulse}
+  If $g(t)$ is defined as a full-response rectangular pulse for the duration $T_s$, i.e.
+  \begin{equation}
+    \label{eq:fp-rect}
+    g(t) = \left\{ \begin{array}{rl} v & t \in [0,T_s] \\
+        0 &\mbox{ otherwise} \\
+      \end{array} \right.
+  \end{equation}
+  Then the fourier transform $G(f)$ is:
+  \begin{equation}
+    \label{eq:fp-rect-fourier}
+    G(f) = v T_s \mathrm{sinc}(\pi f T_s) e^{-j \pi f T_s}
+  \end{equation}
+  \begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}[domain=-2.4:2.4]
+      \draw[->] (-2.5,0) -- (2.6,0) node[right] {$f$};
+      \draw[->] (0,-0.1) -- (0,2.1) node[above] {$|G(f)|$};
+      \draw[very thick,smooth,samples=200,variable=\x] plot (\x,{sin(1.2*pi*\x r)/(pi*\x)});
+      \draw (1/1.2,4pt) -- (1/1.2,-6pt) node[below=2pt] {$\frac{1}{T_s}$};
+      \draw (-1/1.2,4pt) -- (-1/1.2,-6pt) node[below=2pt] {$-\frac{1}{T_s}$};
+      \draw (2/1.2,4pt) -- (2/1.2,-6pt) node[below=2pt] {$\frac{2}{T_s}$};;
+      \draw (-6pt,1.2) -- (6pt,1.2) node[left=9pt] {$v T_s$};
+      % \draw[very thin,color=gray] (-0.1,-0.1) grid (1.1,1.1);
+    \end{tikzpicture}
+    \label{fig:fp-rect-fourier}
+    \caption{$|G(f)|$ for the rectangular pulse given in Example \ref{ex:rect-pulse}}
+  \end{figure}
+\end{example}
+
+Recall that the symbol rate $R_s$ and the symbol transmission time $T_s$ hold the following relation:
+\begin{equation*}
+  R_s = \frac{1}{T_s}
+\end{equation*}
+
+\begin{example}[BPSK]
+  The BPSK encoding scheme uses the rectangular pulse from Example \ref{ex:rect-pulse}, with the two symbols $A_k \in \{-1,+1\}$. Assuming equal symbol probabilities ($p_1 = p_2 = 1/2$), we have:
+  \begin{eqnarray*}
+    \mu_A &=& 0 \\
+    \sigma_A^2 &=& 1/2 A_1^2 + 1/2 A_2^2 = 1 \\
+    S_d(f) &=& \frac{v^2T_s^2}{T_s} \mathrm{sinc}^2(\pi f T_s) = \frac{v^2}{R_s} \mathrm{sinc}^2(\frac{\pi f}{R_s})
+  \end{eqnarray*}
+  \begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}[domain=-2.4:2.4]
+      \draw[->] (-2.5,0) -- (2.6,0) node[right] {$f$};
+      \draw[->] (0,-0.1) -- (0,2.1) node[above] {$|S_d(f)|$};
+      \draw[very thick,smooth,samples=200,variable=\x] plot (\x,{(sin(1.2*pi*\x r)/(pi*\x))^2});
+      \draw (1/1.2,4pt) -- (1/1.2,-6pt) node[below=2pt] {$R_s$};
+      \draw (-1/1.2,4pt) -- (-1/1.2,-6pt) node[below=2pt] {$-R_s$};
+      \draw (2/1.2,4pt) -- (2/1.2,-6pt) node[below=2pt] {$2R_s$};;
+      \draw (-6pt,1.2^2) -- (6pt,1.2^2) node[left=9pt] {$(\frac{v}{R_s})^2$};
+      % \draw[very thin,color=gray] (-0.1,-0.1) grid (1.1,1.1);
+    \end{tikzpicture}
+    \label{fig:fp-rect-fourier}
+    \caption{$|S_d(f)|$ for BPSK}
+  \end{figure}
+\end{example}
 
 \clearpage
 \bibliographystyle{IEEEtran}
